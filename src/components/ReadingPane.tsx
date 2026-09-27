@@ -64,18 +64,19 @@ const kindLabels: Record<string, string> = {
 
 function AttachmentChip({ att }: { att: Attachment }) {
   return (
-    <div className="flex w-56 items-center gap-3 border border-gray-200 bg-gray-50 p-3 transition-colors hover:border-gray-400">
+    <div className="flex max-w-[260px] items-center gap-2 border border-gray-200 bg-gray-50 px-2.5 py-1.5 transition-colors hover:border-gray-400">
       <div
-        className={`grid h-9 w-9 shrink-0 place-items-center text-[9px] font-bold text-white ${kindStyles[att.kind] ?? 'bg-gray-500'}`}
+        className={`grid h-[18px] w-[18px] shrink-0 place-items-center text-[7px] font-bold text-white ${kindStyles[att.kind] ?? 'bg-gray-500'}`}
       >
         {kindLabels[att.kind] ?? 'FILE'}
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-gray-800">{att.name}</p>
-        <p className="text-xs text-gray-400">{att.size}</p>
-      </div>
-      <button aria-label={`Download ${att.name}`} className="text-gray-400 transition-colors hover:text-gray-600">
-        <Download className="h-4 w-4" />
+      <span className="truncate text-xs font-medium text-gray-700">{att.name}</span>
+      <span className="shrink-0 text-[11px] text-gray-400">{att.size}</span>
+      <button
+        aria-label={`Download ${att.name}`}
+        className="shrink-0 text-gray-300 transition-colors hover:text-gray-600"
+      >
+        <Download className="h-3.5 w-3.5" />
       </button>
     </div>
   )
@@ -210,7 +211,7 @@ export default function ReadingPane({
 
         {/* Reply composer */}
         <div className="px-6 pb-6">
-          <div className="border border-gray-200">
+          <div>
             {/* To row */}
             <div className="flex items-center justify-between gap-2 border-b border-gray-200 px-4 py-2.5">
               <div className="flex min-w-0 items-center gap-2">
@@ -218,10 +219,7 @@ export default function ReadingPane({
                   <Reply className="h-4 w-4" />
                 </button>
                 <span className="text-sm text-gray-500">To:</span>
-                <span className="flex items-center gap-1.5 border border-gray-200 bg-gray-50 py-1 pl-1 pr-2.5 text-xs font-medium text-gray-700">
-                  <span className="grid h-5 w-5 place-items-center bg-gray-300 text-[9px] font-bold text-white">
-                    {mail.from.split(' ').map((w) => w[0]).slice(0, 2).join('')}
-                  </span>
+                <span className="flex items-center gap-1.5 border border-gray-200 bg-gray-50 py-1 pl-2.5 pr-2.5 text-xs font-medium text-gray-700">
                   {mail.from}
                   <X className="h-3.5 w-3.5 text-gray-400" />
                 </span>
@@ -285,7 +283,7 @@ export default function ReadingPane({
                 </button>
                 <button
                   onClick={send}
-                  className="ml-1 flex items-center gap-2 border border-gray-900 bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-gray-800"
+                  className="ml-1 flex items-center gap-2 border border-gray-200 bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-900 transition-colors duration-150 hover:bg-gray-200"
                 >
                   Send now
                   <SendIcon className="h-4 w-4" />

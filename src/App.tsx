@@ -33,8 +33,9 @@ export default function App() {
 
   const [trash, setTrash] = useState<string[]>([])
 
-  /** Folder membership: trash holds deleted mail; every other folder excludes it. */
+  /** Folder membership: trash holds deleted mail; sent/drafts are empty until compose exists. */
   const visible = useMemo(() => {
+    if (folder === 'sent' || folder === 'drafts') return []
     let list =
       folder === 'trash' ? mails.filter((m) => trash.includes(m.id)) : mails.filter((m) => !trash.includes(m.id))
 
@@ -120,8 +121,8 @@ export default function App() {
       ) : (
         <section className="hidden min-w-0 flex-1 items-center justify-center bg-white md:flex">
           <div className="text-center">
-            <div className="mx-auto grid h-16 w-16 place-items-center border border-gray-200 text-gray-400">
-              <Mail className="h-8 w-8" strokeWidth={1.5} />
+            <div className="mx-auto grid place-items-center text-gray-300">
+              <Mail className="h-12 w-12" strokeWidth={1.25} />
             </div>
             <h2 className="mt-4 text-lg font-semibold text-gray-800">Select an email</h2>
             <p className="mt-1 text-sm text-gray-400">

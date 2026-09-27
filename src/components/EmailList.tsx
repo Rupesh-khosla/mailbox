@@ -42,7 +42,7 @@ export default function EmailList({
   onToggleStar,
 }: EmailListProps) {
   return (
-    <section className="flex h-full w-[340px] shrink-0 flex-col border-r border-gray-200 bg-white">
+    <section className="flex h-full w-[384px] shrink-0 flex-col border-r border-gray-200 bg-white">
       {/* Title + sort */}
       <div className="flex items-center justify-between px-5 pb-2 pt-5">
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">{title}</h1>
@@ -69,7 +69,7 @@ export default function EmailList({
       </div>
 
       {/* Filter chips */}
-      <div className="flex gap-2 px-5 pb-3">
+      <div className="flex flex-wrap gap-2 px-5 pb-3">
         {filters.map((f) => {
           const count =
             f.id === 'all' ? emails.length : f.id === 'unread' ? emails.filter((e) => e.unread).length : undefined
@@ -77,15 +77,15 @@ export default function EmailList({
             <button
               key={f.id}
               onClick={() => onFilterChange(f.id)}
-              className={`border px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`border px-3 py-1.5 text-xs font-medium transition-colors duration-150 ${
                 filter === f.id
-                  ? 'border-gray-900 bg-gray-900 text-white'
-                  : 'border-gray-200 bg-white text-gray-500 hover:border-gray-400 hover:text-gray-700'
+                  ? 'border-gray-200 bg-gray-100 text-gray-900'
+                  : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700'
               }`}
             >
               {f.label}
               {count !== undefined && count > 0 && (
-                <span className={`ml-1 ${filter === f.id ? 'text-gray-400' : 'text-gray-400'}`}>{count}</span>
+                <span className={`ml-1 ${filter === f.id ? 'text-gray-500' : 'text-gray-400'}`}>{count}</span>
               )}
             </button>
           )
@@ -104,9 +104,9 @@ export default function EmailList({
             <article
               key={mail.id}
               onClick={() => onSelect(mail.id)}
-              className={`group relative cursor-pointer border-b border-gray-100 py-3.5 pl-4 pr-4 transition-colors ${
+              className={`group relative cursor-pointer border-b border-gray-100 py-3.5 pl-4 pr-4 transition ${
                 selected ? 'bg-gray-100' : 'hover:bg-gray-50'
-              }`}
+              } ${!selected && !mail.unread ? 'opacity-60 hover:opacity-100' : ''}`}
             >
               {/* Top row: avatar | name + dot … paperclip */}
               <div className="flex items-start gap-3">
