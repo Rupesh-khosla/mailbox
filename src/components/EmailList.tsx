@@ -18,6 +18,8 @@ interface EmailListProps {
   onSortChange: (s: SortOrder) => void
   onSelect: (id: string) => void
   onToggleStar: (id: string) => void
+  onCompose: () => void
+  onEditDraft: (id: string) => void
 }
 
 const filters: { id: Filter; label: string }[] = [
@@ -40,6 +42,8 @@ export default function EmailList({
   onSortChange,
   onSelect,
   onToggleStar,
+  onCompose,
+  onEditDraft,
 }: EmailListProps) {
   return (
     <section className="flex h-full w-[384px] shrink-0 flex-col border-r border-gray-200 bg-white">
@@ -95,7 +99,17 @@ export default function EmailList({
       {/* Rows — borderless, separated by hairline dividers */}
       <div className="slim-scroll flex-1 overflow-y-auto border-t border-gray-200 pb-4">
         {emails.length === 0 && (
-          <p className="px-3 py-10 text-center text-sm text-gray-400">{emptyMessage}</p>
+          <div className="px-3 py-10 text-center">
+            <p className="text-sm text-gray-400">{emptyMessage}</p>
+            {(title.includes('Drafts') || title.includes('Sent')) && (
+              <button
+                onClick={onCompose}
+                className="mt-3 border border-gray-200 bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-900 transition-colors duration-150 hover:bg-gray-200"
+              >
+                Write a message
+              </button>
+            )}
+          </div>
         )}
 
         {emails.map((mail) => {
@@ -103,7 +117,7 @@ export default function EmailList({
           return (
             <article
               key={mail.id}
-              onClick={() => onSelect(mail.id)}
+              onClick={() => (mail.id.startsWith('draft-') ? onEditDraft(mail.id) : onSelect(mail.id))}
               className={`group relative cursor-pointer border-b border-gray-100 py-3.5 pl-4 pr-4 transition ${
                 selected ? 'bg-gray-100' : 'hover:bg-gray-50'
               } ${!selected && !mail.unread ? 'opacity-60 hover:opacity-100' : ''}`}

@@ -4,6 +4,7 @@ import { emails as seedEmails, type Email } from './data/emails'
 import IconRail, { type Folder } from './components/IconRail'
 import EmailList, { type Filter, type SortOrder } from './components/EmailList'
 import ReadingPane from './components/ReadingPane'
+import ComposeModal, { type ComposeData } from './components/ComposeModal'
 
 const folderTitles: Record<Folder, string> = {
   inbox: 'Inbox',
@@ -33,11 +34,15 @@ export default function App() {
 
   const [trash, setTrash] = useState<string[]>([])
 
-  /** Folder membership: trash holds deleted mail; sent/drafts are empty until compose exists. */
+  /** Folder membership: trash holds deleted mail; sent holds composed mail; drafts empty. */
   const visible = useMemo(() => {
-    if (folder === 'sent' || folder === 'drafts') return []
+    if (folder === 'drafts') return []
     let list =
-      folder === 'trash' ? mails.filter((m) => trash.includes(m.id)) : mails.filter((m) => !trash.includes(m.id))
+      folder === 'sent'
+        ? mails.filter((m) => m.id.startsWith('sent-'))
+        : folder === 'trash'
+          ? mails.filter((m) => trash.includes(m.id))
+          : mails.filter((m) => !trash.includes(m.id) && !m.id.startsWith('sent-'))
 
     if (folder === 'starred') list = list.filter((m) => m.starred)
     if (folder === 'alerts') list = list.filter((m) => m.unread)
@@ -74,6 +79,71 @@ export default function App() {
     if (selectedId === id) setSelectedId(null)
   }
 
+  const [composeOpen, setComposeOpen] = useState(false)
+  const [composeDraft, setComposeDraft] = useState<Partial<ComposeData> | undefined>(undefined)
+
+  const recipientsLine = (raw: string) =>
+    raw
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .join(', ')
+
+  const buildMail = (id: string, data: ComposeData): Email => ({
+    id,
+    from: recipientsLine(data.to),
+    email: data.to,
+    subject: data.subject || '(no subject)',
+    snippet:
+      data.body.slice(0, 70) + (data.body.length > 70 ? '...' : '') || '(no content)',
+    body: data.body ? [data.body] : ['(no content)'],
+    time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+    day: 'Today',
+    unread: false,
+    starred: false,
+    attachments: data.attachments.map((a, i) => ({ id: `${id}-a${i}`, ...a })),
+    color: 'bg-gray-600',
+    avatar: '',
+    recency: 101,
+  })
+
+  const sendMail = (data: ComposeData) => {
+    const newMail = buildMail(`sent-${Date.now()}`, data)
+    setMails((prev) => [newMail, ...prev])
+    setComposeOpen(false)
+    setComposeDraft(undefined)
+    setFolder('sent')
+    setSelectedId(newMail.id)
+  }
+
+  const saveDraft = (data: ComposeData) => {
+    const newMail = buildMail(`draft-${Date.now()}`, data)
+    setMails((prev) => [newMail, ...prev])
+    setComposeOpen(false)
+    setComposeDraft(undefined)
+    setFolder('drafts')
+    setSelectedId(null)
+  }
+
+  const openCompose = (prefill?: Partial<ComposeData>) => {
+    setComposeDraft(prefill)
+    setComposeOpen(true)
+  }
+
+  /** Clicking a draft reopens the compose window prefilled and removes the draft entry. */
+  const editDraft = (id: string) => {
+    const mail = mails.find((m) => m.id === id)
+    if (!mail) return
+    openCompose({
+      to: mail.email,
+      subject: mail.subject === '(no subject)' ? '' : mail.subject,
+      body: mail.body.join('\n\n') === '(no content)' ? '' : mail.body.join('\n\n'),
+      attachments: mail.attachments.map(({ name, size, kind }) => ({ name, size, kind })),
+    })
+    setMails((prev) => prev.filter((m) => m.id !== id))
+    setSelectedId(null)
+  }
+
   const step = (dir: 1 | -1) => {
     if (selectedIndex < 0) return
     const next = visible[selectedIndex + dir]
@@ -82,6 +152,17 @@ export default function App() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 text-gray-900">
+      {composeOpen && (
+        <ComposeModal
+          initial={composeDraft}
+          onClose={() => {
+            setComposeOpen(false)
+            setComposeDraft(undefined)
+          }}
+          onSend={sendMail}
+          onSaveDraft={saveDraft}
+        />
+      )}
       <IconRail
         active={folder}
         onSelectFolder={(f) => {
@@ -89,10 +170,13 @@ export default function App() {
           setFilter('all')
           setSelectedId(null)
         }}
+        onCompose={() => setComposeOpen(true)}
       />
 
       <EmailList
         title={folderTitles[folder]}
+        onCompose={() => openCompose()}
+        onEditDraft={editDraft}
         emails={visible}
         selectedId={selectedId}
         search={search}

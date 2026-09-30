@@ -3,29 +3,27 @@ import {
   Archive,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   CircleAlert,
   Download,
   Link2,
   MoreVertical,
   Paperclip,
   Pencil,
-  Printer,
   Reply,
   Share,
   Smile,
-  Star,
   Trash2,
   Underline,
   Bold,
   Italic,
   Image as ImageIcon,
   Forward,
+  Printer,
+  Star,
   Send as SendIcon,
   X,
   Maximize2,
-  AlignLeft,
-  List,
-  RemoveFormatting,
 } from 'lucide-react'
 import type { Attachment, Email } from '../data/emails'
 import Avatar from './Avatar'
@@ -94,6 +92,18 @@ export default function ReadingPane({
 }: ReadingPaneProps) {
   const [reply, setReply] = useState('')
   const [toast, setToast] = useState<string | null>(null)
+  const [font, setFont] = useState('Inter')
+  const [fontOpen, setFontOpen] = useState(false)
+  const [composerOpen, setComposerOpen] = useState(false)
+
+  const fontOptions: { label: string; stack: string }[] = [
+    { label: 'Inter', stack: '"Inter", sans-serif' },
+    { label: 'Arial', stack: 'Arial, sans-serif' },
+    { label: 'Georgia', stack: 'Georgia, serif' },
+    { label: 'Times New Roman', stack: '"Times New Roman", serif' },
+    { label: 'Courier New', stack: '"Courier New", monospace' },
+  ]
+  const activeFont = fontOptions.find((f) => f.label === font) ?? fontOptions[0]
 
   const showToast = (msg: string) => {
     setToast(msg)
@@ -114,22 +124,23 @@ export default function ReadingPane({
       {/* Toolbar */}
       <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3">
         <div className="flex items-center gap-1">
-          <button onClick={onBack} className={iconBtn} aria-label="Back">
+          <button onClick={onBack} className={iconBtn} aria-label="Back" title="Back">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <button
             onClick={() => showToast('Conversation archived')}
             className={iconBtn}
             aria-label="Archive"
+            title="Archive"
           >
             <Archive className="h-5 w-5" />
           </button>
-          <button onClick={() => showToast('Marked as spam')} className={iconBtn} aria-label="Report spam">
+          <button onClick={() => showToast('Marked as spam')} className={iconBtn} aria-label="Report spam" title="Report spam">
             <CircleAlert className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center border border-gray-200 px-0.5">
           <button
             onClick={onPrev}
             disabled={index < 0 || index <= 0}
@@ -138,7 +149,7 @@ export default function ReadingPane({
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
-          <span className="px-2 text-sm font-medium text-gray-500">
+          <span className="px-2 text-xs font-semibold text-gray-600">
             {index >= 0 ? `${index + 1} of ${total}` : `${total} in view`}
           </span>
           <button
@@ -152,10 +163,10 @@ export default function ReadingPane({
         </div>
 
         <div className="flex items-center gap-1">
-          <button onClick={() => showToast('Share link copied')} className={iconBtn} aria-label="Share">
+          <button onClick={() => showToast('Share link copied')} className={iconBtn} aria-label="Share" title="Share">
             <Share className="h-5 w-5" />
           </button>
-          <button className={iconBtn} aria-label="More">
+          <button className={iconBtn} aria-label="More" title="More">
             <MoreVertical className="h-5 w-5" />
           </button>
         </div>
@@ -188,14 +199,14 @@ export default function ReadingPane({
 
           {/* Attachments */}
           {mail.attachments.length > 0 && (
-            <div className="mt-8 border-t border-gray-200 pt-5">
+            <div className="-mx-6 mt-8 border-b border-gray-200 px-6 pb-5">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-gray-800">
+                <h3 className="text-xs font-semibold text-gray-500">
                   {mail.attachments.length} Attachment{mail.attachments.length > 1 ? 's' : ''}
                 </h3>
                 <button
                   onClick={() => showToast('Preparing download…')}
-                  className="text-sm font-semibold text-gray-900 underline-offset-2 transition-colors hover:underline"
+                  className="text-xs font-medium text-gray-500 transition-colors duration-150 hover:text-gray-800"
                 >
                   Download All
                 </button>
@@ -209,8 +220,9 @@ export default function ReadingPane({
           )}
         </div>
 
-        {/* Reply composer */}
-        <div className="px-6 pb-6">
+        {/* Reply composer — collapsed by default; tinted zone when open */}
+        <div className={composerOpen ? '-mx-6 bg-gray-50 px-6 pb-6' : '-mx-6 bg-gray-50 px-6 py-1'}>
+          {composerOpen ? (
           <div>
             {/* To row */}
             <div className="flex items-center justify-between gap-2 border-b border-gray-200 px-4 py-2.5">
@@ -227,78 +239,133 @@ export default function ReadingPane({
               <div className="flex items-center gap-3 text-sm text-gray-400">
                 <button className="transition-colors hover:text-gray-600">Cc</button>
                 <button className="transition-colors hover:text-gray-600">Bcc</button>
+                <button
+                  onClick={() => setComposerOpen(false)}
+                  className={iconBtn + ' h-8 w-8'}
+                  aria-label="Collapse composer"
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </button>
                 <button className={iconBtn + ' h-8 w-8'} aria-label="Fullscreen">
                   <Maximize2 className="h-4 w-4" />
                 </button>
               </div>
             </div>
 
-            {/* Textarea + format toolbar */}
-            <div className="px-4 pb-1 pt-3">
+            {/* Textarea + format toolbar — one continuous body */}
+            <div className="flex items-start gap-3 px-4 pt-3">
               <textarea
                 value={reply}
                 onChange={(e) => setReply(e.target.value)}
                 placeholder="Write a reply…"
-                rows={3}
-                className="w-full resize-none bg-transparent text-sm leading-relaxed text-gray-700 outline-none placeholder:text-gray-400"
+                rows={2}
+                style={{ fontFamily: activeFont.stack }}
+                className="min-w-0 flex-1 resize-none bg-transparent text-sm leading-relaxed text-gray-700 outline-none placeholder:text-gray-400"
               />
-              <div className="flex justify-end">
-                <div className="mb-2 flex items-center gap-0.5 border border-gray-200 px-1.5 py-1">
-                  <button className={iconBtn + ' h-8 w-8'} aria-label="Bold"><Bold className="h-4 w-4" /></button>
-                  <button className={iconBtn + ' h-8 w-8'} aria-label="Italic"><Italic className="h-4 w-4" /></button>
-                  <button className={iconBtn + ' h-8 w-8'} aria-label="Underline"><Underline className="h-4 w-4" /></button>
-                  <button className={iconBtn + ' h-8 w-8'} aria-label="Insert link"><Link2 className="h-4 w-4" /></button>
-                  <button className={iconBtn + ' h-8 w-8'} aria-label="Align"><AlignLeft className="h-4 w-4" /></button>
-                  <button className={iconBtn + ' h-8 w-8'} aria-label="Bulleted list"><List className="h-4 w-4" /></button>
-                  <button className={iconBtn + ' h-8 w-8'} aria-label="Clear formatting"><RemoveFormatting className="h-4 w-4" /></button>
+              <div className="relative mt-0.5 shrink-0">
+                <div className="flex items-center border border-gray-200 bg-white px-0.5 py-0.5">
+                  <button
+                    onClick={() => setFontOpen((o) => !o)}
+                    className="flex items-center gap-0.5 px-1.5 py-1 text-[11px] font-medium text-gray-800 transition-colors duration-150 hover:bg-gray-100"
+                    aria-label="Font family"
+                  >
+                    {font}
+                    <ChevronDown className="h-3 w-3 text-gray-400" />
+                  </button>
+                  <button className={iconBtn + ' h-7 w-7 text-gray-800 hover:text-gray-900'} aria-label="Bold">
+                    <Bold className="h-3.5 w-3.5" />
+                  </button>
+                  <button className={iconBtn + ' h-7 w-7'} aria-label="Italic">
+                    <Italic className="h-3.5 w-3.5" />
+                  </button>
+                  <button className={iconBtn + ' h-7 w-7'} aria-label="Underline">
+                    <Underline className="h-3.5 w-3.5" />
+                  </button>
+
+                  {fontOpen && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setFontOpen(false)} />
+                      <div className="absolute right-0 top-full z-20 mt-1 w-44 border border-gray-200 bg-white py-1">
+                        {fontOptions.map((f) => (
+                          <button
+                            key={f.label}
+                            onClick={() => {
+                              setFont(f.label)
+                              setFontOpen(false)
+                            }}
+                            style={{ fontFamily: f.stack }}
+                            className={`block w-full px-3 py-1.5 text-left text-sm transition-colors duration-150 hover:bg-gray-100 ${
+                              f.label === font ? 'bg-gray-100 text-gray-900' : 'text-gray-600'
+                            }`}
+                          >
+                            {f.label}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Bottom action row */}
-            <div className="flex items-center justify-between border-t border-gray-200 px-4 py-2.5">
-              <div className="flex items-center gap-0.5">
-                <button onClick={() => showToast('Attach a file')} className={iconBtn} aria-label="Attach">
-                  <Paperclip className="h-4 w-4" />
-                </button>
-                <button onClick={() => showToast('Insert link')} className={iconBtn} aria-label="Insert link">
-                  <Link2 className="h-4 w-4" />
-                </button>
-                <button onClick={() => showToast('Insert image')} className={iconBtn} aria-label="Insert image">
-                  <ImageIcon className="h-4 w-4" />
-                </button>
-                <button onClick={() => showToast('Signature pad')} className={iconBtn} aria-label="Signature">
-                  <Pencil className="h-4 w-4" />
-                </button>
-                <button onClick={() => showToast('Emoji picker')} className={iconBtn} aria-label="Emoji">
-                  <Smile className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="flex items-center gap-1">
-                <button onClick={() => showToast('Draft discarded')} className={iconBtn} aria-label="Discard">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-                <button className={iconBtn} aria-label="More options">
-                  <MoreVertical className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={send}
-                  className="ml-1 flex items-center gap-2 border border-gray-200 bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-900 transition-colors duration-150 hover:bg-gray-200"
-                >
-                  Send now
-                  <SendIcon className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
           </div>
+          ) : (
+            <button
+              onClick={() => setComposerOpen(true)}
+              className="flex w-full items-center gap-3 px-2 py-2.5 text-left transition-colors duration-150 hover:bg-gray-100"
+            >
+              <Reply className="h-4 w-4 shrink-0 text-gray-400" />
+              <span className="min-w-0 truncate text-sm text-gray-500">
+                Write a reply to <span className="font-medium text-gray-700">{mail.from}</span>…
+              </span>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Footer actions */}
+      {/* Bottom action bar — visible while composing */}
+      {composerOpen && (
       <div className="flex items-center justify-between border-t border-gray-200 px-6 py-3">
+        <div className="flex items-center gap-0.5">
+          <button onClick={() => showToast('Attach a file')} className={iconBtn} aria-label="Attach">
+            <Paperclip className="h-4 w-4" />
+          </button>
+          <button onClick={() => showToast('Insert link')} className={iconBtn} aria-label="Insert link">
+            <Link2 className="h-4 w-4" />
+          </button>
+          <button onClick={() => showToast('Insert image')} className={iconBtn} aria-label="Insert image">
+            <ImageIcon className="h-4 w-4" />
+          </button>
+          <button onClick={() => showToast('Signature pad')} className={iconBtn} aria-label="Signature">
+            <Pencil className="h-4 w-4" />
+          </button>
+          <button onClick={() => showToast('Emoji picker')} className={iconBtn} aria-label="Emoji">
+            <Smile className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="flex items-center gap-1">
+          <button onClick={() => showToast('Draft discarded')} className={iconBtn} aria-label="Discard">
+            <Trash2 className="h-4 w-4" />
+          </button>
+          <button className={iconBtn} aria-label="More options">
+            <MoreVertical className="h-4 w-4" />
+          </button>
+          <button
+            onClick={send}
+            className="ml-1 flex items-center gap-2 border border-gray-200 bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-900 transition-colors duration-150 hover:bg-gray-200"
+          >
+            Send now
+            <SendIcon className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+      )}
+
+      {/* Mail actions — Reply/Forward/Print + Star/Delete */}
+      <div className="flex items-center justify-between border-t border-gray-100 px-6 py-2.5">
         <div className="flex items-center gap-5">
           <button
-            onClick={() => showToast('Reply mode — use the composer above')}
+            onClick={() => setComposerOpen(true)}
             className="flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-800"
           >
             <Reply className="h-4 w-4" /> Reply
