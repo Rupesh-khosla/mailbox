@@ -172,8 +172,10 @@ export default function ReadingPane({
         </div>
       </div>
 
-      {/* Scrollable message area */}
-      <div className="slim-scroll flex-1 overflow-y-auto">
+      {/* Scrollable message area — grey canvas with white message surface */}
+      <div className="slim-scroll flex-1 overflow-y-auto bg-gray-50">
+        {/* White message surface */}
+        <div className="border-b border-gray-200 bg-white">
         {/* Sender header */}
         <div className="flex items-start justify-between px-6 pb-2 pt-5">
           <div className="flex items-center gap-4">
@@ -219,9 +221,16 @@ export default function ReadingPane({
             </div>
           )}
         </div>
+        </div>
 
-        {/* Reply composer — collapsed by default; tinted zone when open */}
-        <div className={composerOpen ? '-mx-6 bg-gray-50 px-6 pb-6' : '-mx-6 bg-gray-50 px-6 py-1'}>
+        {/* Canvas filler — owns the space between message and docked composer */}
+        <div className="min-h-6 flex-1" />
+      </div>
+
+      {/* Docked composer + actions — one connected unit at the pane's foot */}
+      <div className="shrink-0 border-t border-gray-200 bg-white">
+        {/* Reply composer — collapsed strip by default */}
+        <div className={composerOpen ? 'bg-gray-50 px-6 pb-5 pt-4' : ''}>
           {composerOpen ? (
           <div>
             {/* To row */}
@@ -312,7 +321,7 @@ export default function ReadingPane({
           ) : (
             <button
               onClick={() => setComposerOpen(true)}
-              className="flex w-full items-center gap-3 px-2 py-2.5 text-left transition-colors duration-150 hover:bg-gray-100"
+              className="flex w-full items-center gap-3 border-b border-gray-100 px-6 py-3 text-left transition-colors duration-150 hover:bg-gray-50"
             >
               <Reply className="h-4 w-4 shrink-0 text-gray-400" />
               <span className="min-w-0 truncate text-sm text-gray-500">
@@ -321,11 +330,10 @@ export default function ReadingPane({
             </button>
           )}
         </div>
-      </div>
 
-      {/* Bottom action bar — visible while composing */}
-      {composerOpen && (
-      <div className="flex items-center justify-between border-t border-gray-200 px-6 py-3">
+        {/* Composer actions — visible while composing */}
+        {composerOpen && (
+        <div className="flex items-center justify-between px-6 pb-3 pt-1">
         <div className="flex items-center gap-0.5">
           <button onClick={() => showToast('Attach a file')} className={iconBtn} aria-label="Attach">
             <Paperclip className="h-4 w-4" />
@@ -358,18 +366,13 @@ export default function ReadingPane({
             <SendIcon className="h-4 w-4" />
           </button>
         </div>
+        </div>
+        )}
       </div>
-      )}
 
-      {/* Mail actions — Reply/Forward/Print + Star/Delete */}
-      <div className="flex items-center justify-between border-t border-gray-100 px-6 py-2.5">
+      {/* Mail actions — Forward/Print + Star/Delete */}
+      <div className="flex shrink-0 items-center justify-between border-t border-gray-200 px-6 py-2.5">
         <div className="flex items-center gap-5">
-          <button
-            onClick={() => setComposerOpen(true)}
-            className="flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-800"
-          >
-            <Reply className="h-4 w-4" /> Reply
-          </button>
           <button
             onClick={() => showToast('Forward mode — use the composer above')}
             className="flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-800"
