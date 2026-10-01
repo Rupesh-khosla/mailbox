@@ -6,6 +6,8 @@ export interface Attachment {
   size: string
   /** File type key used for the colored badge, e.g. "pdf" | "zip" | "img" | "doc" | "xls" */
   kind: string
+  /** Object URL for real (user-attached) files — enables actual downloads */
+  url?: string
 }
 
 export interface Email {

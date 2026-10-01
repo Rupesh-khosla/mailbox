@@ -7,7 +7,7 @@ export interface ComposeData {
   bcc: string
   subject: string
   body: string
-  attachments: { name: string; size: string; kind: string }[]
+  attachments: { name: string; size: string; kind: string; url?: string }[]
 }
 
 interface ComposeModalProps {
@@ -19,7 +19,7 @@ interface ComposeModalProps {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-const kindFor = (name: string) => {
+export const kindFor = (name: string) => {
   const ext = name.split('.').pop()?.toLowerCase() ?? ''
   if (ext === 'pdf') return 'pdf'
   if (['zip', 'rar', '7z'].includes(ext)) return 'zip'
@@ -30,10 +30,10 @@ const kindFor = (name: string) => {
   return 'code'
 }
 
-const fmtSize = (bytes: number) =>
+export const fmtSize = (bytes: number) =>
   bytes > 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`
 
-const EMOJIS = ['😊', '👍', '🙏', '🎉', '❤️', '😅', '🤝', '📅', '✅', '🚀']
+export const EMOJIS = ['😊', '👍', '🙏', '🎉', '❤️', '😅', '🤝', '📅', '✅', '🚀']
 
 const fonts = [
   { label: 'Inter', stack: '"Inter", sans-serif' },
@@ -86,7 +86,12 @@ export default function ComposeModal({ initial, onClose, onSend, onSaveDraft }: 
 
   const addFiles = (files: FileList | null) => {
     if (!files) return
-    const next = [...files].map((f) => ({ name: f.name, size: fmtSize(f.size), kind: kindFor(f.name) }))
+    const next = [...files].map((f) => ({
+      name: f.name,
+      size: fmtSize(f.size),
+      kind: kindFor(f.name),
+      url: URL.createObjectURL(f),
+    }))
     setAttachments((prev) => [...prev, ...next])
   }
 

@@ -131,7 +131,7 @@ export default function EmailList({
                       {mail.from}
                     </span>
                     {mail.attachments.length > 0 && (
-                      <Paperclip className="h-4 w-4 shrink-0 text-gray-300" />
+                      <Paperclip className="h-4 w-4 shrink-0 text-gray-400" />
                     )}
                   </div>
 

@@ -34,15 +34,18 @@ export default function App() {
 
   const [trash, setTrash] = useState<string[]>([])
 
-  /** Folder membership: trash holds deleted mail; sent holds composed mail; drafts empty. */
+  /** Folder membership: trash holds deleted mail; sent holds composed mail; drafts hold saved drafts. */
   const visible = useMemo(() => {
-    if (folder === 'drafts') return []
     let list =
       folder === 'sent'
         ? mails.filter((m) => m.id.startsWith('sent-'))
-        : folder === 'trash'
-          ? mails.filter((m) => trash.includes(m.id))
-          : mails.filter((m) => !trash.includes(m.id) && !m.id.startsWith('sent-'))
+        : folder === 'drafts'
+          ? mails.filter((m) => m.id.startsWith('draft-'))
+          : folder === 'trash'
+            ? mails.filter((m) => trash.includes(m.id))
+            : mails.filter(
+                (m) => !trash.includes(m.id) && !m.id.startsWith('sent-') && !m.id.startsWith('draft-'),
+              )
 
     if (folder === 'starred') list = list.filter((m) => m.starred)
     if (folder === 'alerts') list = list.filter((m) => m.unread)
@@ -130,6 +133,30 @@ export default function App() {
     setComposeOpen(true)
   }
 
+  /** Reply sent from the reading pane — lands in Sent without leaving the conversation. */
+  const sendReply = (data: ComposeData) => {
+    const newMail = buildMail(`sent-${Date.now()}`, data)
+    setMails((prev) => [newMail, ...prev])
+  }
+
+  /** Reply draft saved from the reading pane — lands in Drafts, stays in the conversation. */
+  const saveReplyDraft = (data: ComposeData) => {
+    const newMail = buildMail(`draft-${Date.now()}`, data)
+    setMails((prev) => [newMail, ...prev])
+  }
+
+  const markUnread = (id: string) => {
+    setMails((prev) => prev.map((m) => (m.id === id ? { ...m, unread: true } : m)))
+    setSelectedId(null)
+  }
+
+  const forwardMail = (m: Email) =>
+    openCompose({
+      to: '',
+      subject: `Fwd: ${m.subject}`,
+      body: `---------- Forwarded message ----------\nFrom: ${m.from} <${m.email}>\nDate: ${m.day}, ${m.time}\nSubject: ${m.subject}\n\n${m.body.join('\n\n')}`,
+    })
+
   /** Clicking a draft reopens the compose window prefilled and removes the draft entry. */
   const editDraft = (id: string) => {
     const mail = mails.find((m) => m.id === id)
@@ -201,6 +228,10 @@ export default function App() {
           onNext={() => step(1)}
           onToggleStar={toggleStar}
           onDelete={deleteMail}
+          onSendReply={sendReply}
+          onSaveReplyDraft={saveReplyDraft}
+          onMarkUnread={markUnread}
+          onForward={forwardMail}
         />
       ) : (
         <section className="hidden min-w-0 flex-1 items-center justify-center bg-white md:flex">
